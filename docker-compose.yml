@@ -1,0 +1,24 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:13.2
+    ports:
+      - "5430:5432"
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+
+  bot:
+    build:
+      context: .
+    command: python src/app.py
+    ports:
+      - "8080:8001"
+    depends_on:
+      - db
+    env_file:
+      - ./config/.env
+    environment:
+      - PYTHONPATH=/code
