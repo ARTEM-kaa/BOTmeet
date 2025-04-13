@@ -32,3 +32,25 @@ async def main_menu_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=constants.VIEW_MATCHES_BUTTON, callback_data=constants.VIEW_MATCHES_CALL)],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+async def preferences_menu_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton(text=constants.MIN_AGE_BUTTON, callback_data=constants.MIN_AGE_CALL)],
+        [InlineKeyboardButton(text=constants.MAX_AGE_BUTTON, callback_data=constants.MAX_AGE_CALL)],
+        [InlineKeyboardButton(text=constants.MIN_RATING_BUTTON, callback_data=constants.MIN_RATING_CALL)],
+        [InlineKeyboardButton(text=constants.MAX_RATING_BUTTON, callback_data=constants.MAX_RATING_CALL)],
+        [InlineKeyboardButton(text=constants.RETURN_ACTION_BUTTON, callback_data=constants.RETURN_ACTION_CALL)],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+async def edit_profile_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [InlineKeyboardButton(text=constants.EDIT_PHOTO_BUTTON, callback_data=constants.EDIT_PHOTO_CALL)],
+        [InlineKeyboardButton(text=constants.EDIT_NAME_BUTTON, callback_data=constants.EDIT_NAME_CALL)],
+        [InlineKeyboardButton(text=constants.EDIT_GENDER_BUTTON, callback_data=constants.EDIT_GENDER_CALL)],
+        [InlineKeyboardButton(text=constants.EDIT_AGE_BUTTON, callback_data=constants.EDIT_AGE_CALL)],
+        [InlineKeyboardButton(text=constants.EDIT_BIO_BUTTON, callback_data=constants.EDIT_BIO_CALL)],
+        [InlineKeyboardButton(text=constants.EDIT_ALL_BUTTON, callback_data=constants.EDIT_ALL_CALL)],
+        [InlineKeyboardButton(text=constants.EDIT_BACK_BUTTON, callback_data=constants.EDIT_BACK_CALL)],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
