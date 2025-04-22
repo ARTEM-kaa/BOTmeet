@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import (
     BigInteger, Boolean, CheckConstraint, ForeignKey, Integer, Numeric,
@@ -21,6 +21,7 @@ class User(Base):
     age: Mapped[int] = mapped_column(Integer, nullable=False)
     gender: Mapped[str] = mapped_column(String, nullable=False)
     bio: Mapped[str] = mapped_column(String(200), nullable=False)
+    rating: Mapped[float] = mapped_column(Numeric(2, 1), nullable=False, default=0.0)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.utcnow)
 
     photo: Mapped['Photo'] = relationship('Photo', back_populates='user', uselist=False, cascade='all, delete-orphan')
@@ -74,8 +75,8 @@ class Rating(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     from_user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     to_user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    score: Mapped[int] = mapped_column(Integer, nullable=False)
-    comment: Mapped[str] = mapped_column(String(50))
+    score: Mapped[int] = mapped_column(Integer, default=0)
+    comment: Mapped[Optional[str]] = mapped_column(String(500), nullable=True) 
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.utcnow)
 
     from_user: Mapped['User'] = relationship('User', foreign_keys=[from_user_id], back_populates='ratings_given')

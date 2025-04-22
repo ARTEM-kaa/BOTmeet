@@ -16,8 +16,15 @@ class EditProfileState(StatesGroup):
     waiting_for_new_age = State()
     waiting_for_new_bio = State()
 
+
 class PreferenceState(StatesGroup):
     waiting_for_min_age = State()
     waiting_for_max_age = State()
     waiting_for_min_rating = State()
     waiting_for_max_rating = State()
+
+
+class MeetingState(StatesGroup):
+    viewing = State()
+    rating = State()
+    comment = State()

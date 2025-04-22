@@ -54,3 +54,38 @@ async def edit_profile_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=constants.EDIT_BACK_BUTTON, callback_data=constants.EDIT_BACK_CALL)],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def meeting_keyboard():
+    keyboard=[
+        [InlineKeyboardButton(text=constants.LIKE_BUTTON, callback_data=constants.LIKE_CALL)],
+        [InlineKeyboardButton(text=constants.DISLIKE_BUTTON, callback_data=constants.DISLIKE_CALL)],
+        [InlineKeyboardButton(text=constants.COMMENT_BUTTON, callback_data=constants.COMMENT_CALL)],
+        [InlineKeyboardButton(text=constants.BACK_TO_MENU_BUTTON, callback_data=constants.BACK_TO_MENU_CALL)],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def stars_keyboard():
+    keyboard=[
+        [
+            InlineKeyboardButton(text=constants.STAR_ONE_BUTTON, callback_data=constants.STAR_ONE_CALL),
+            InlineKeyboardButton(text=constants.STAR_TWO_BUTTON, callback_data=constants.STAR_TWO_CALL),
+            InlineKeyboardButton(text=constants.STAR_THREE_BUTTON, callback_data=constants.STAR_THREE_CALL),
+            InlineKeyboardButton(text=constants.STAR_FOUR_BUTTON, callback_data=constants.STAR_FOUR_CALL),
+            InlineKeyboardButton(text=constants.STAR_FIVE_BUTTON, callback_data=constants.STAR_FIVE_CALL)
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+async def back_to_profile_keyboard():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=constants.BACK_TO_PROFILE_BUTTON, callback_data=constants.BACK_TO_PROFILE_CALL)]
+    ])
+
+
+async def back_to_menu_keyboard():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=constants.BACK_TO_MENU_BUTTON, callback_data=constants.BACK_TO_MENU_CALL)]
+    ])

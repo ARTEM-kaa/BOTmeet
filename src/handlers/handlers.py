@@ -1,11 +1,11 @@
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, Union
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.orm import selectinload
 
 from templates import keyboards, texts, constants
-from states.states import RegistrationState, EditProfileState, PreferenceState
+from states.states import RegistrationState, EditProfileState, PreferenceState, MeetingState
 from storage.s3_yandex import upload_photo_to_s3
-from storage.time_db_logic import create_user_profile, update_user_field, update_user_photo, update_user_preferences
+from storage.time_db_logic import create_user_profile, update_user_field, update_user_photo, update_user_preferences, get_next_profile, save_like, save_rating, save_comment, check_existing_comment
 from storage.db import async_session
 from sqlalchemy import select, func
 from model.models import Like, Rating, User
@@ -25,9 +25,19 @@ async def start_registration(call: CallbackQuery, state: FSMContext):
 
 
 async def get_full_name(msg: Message, state: FSMContext):
+    if not msg.text:
+        return await msg.answer(await texts.data_name_error())
+    
+    if any(char.isdigit() for char in msg.text):
+        return await msg.answer(await texts.data_name_error_char())
+    
     parts = msg.text.strip().split()
     if len(parts) != 3:
         return await msg.answer(await texts.ask_full_name_again())
+
+    for part in parts:
+        if not part.isalpha():
+            return await msg.answer(await texts.data_name_error())
 
     await state.update_data(full_name=msg.text)
     await msg.answer(await texts.ask_age())
@@ -35,10 +45,15 @@ async def get_full_name(msg: Message, state: FSMContext):
 
 
 async def get_age(msg: Message, state: FSMContext):
-    if not msg.text.isdigit():
+    if not msg.text:
         return await msg.answer(await texts.ask_age_again())
+    
+    age = int(msg.text)
+    
+    if age < 10 or age > 110:
+        return await msg.answer(await texts.age_length_error())
 
-    await state.update_data(age=msg.text)
+    await state.update_data(age=age)
     await msg.answer(await texts.ask_gender(), reply_markup=await keyboards.gender_keyboard())
     await state.set_state(RegistrationState.waiting_for_gender)
 
@@ -52,6 +67,16 @@ async def get_gender(call: CallbackQuery, state: FSMContext):
 
 
 async def get_bio(msg: Message, state: FSMContext):
+    if not msg.text:
+        return await msg.answer(await texts.data_bio_error())
+    
+    if len(msg.text) > 500:
+        return await msg.answer(await texts.bio_length_error())
+    
+    forbidden_chars = ["<", ">", "&", "'", "\""]
+    if any(char in msg.text for char in forbidden_chars):
+        return await msg.answer(await texts.prohibited_characters())
+
     await state.update_data(bio=msg.text)
     await msg.answer(await texts.ask_photo())
     await state.set_state(RegistrationState.waiting_for_photo)
@@ -60,28 +85,38 @@ async def get_bio(msg: Message, state: FSMContext):
 async def get_photo(msg: Message, state: FSMContext):
     if not msg.photo:
         return await msg.answer(await texts.ask_photo_again())
-
+    
     photo = msg.photo[-1]
-    file = await msg.bot.get_file(photo.file_id)
-    file_data = await msg.bot.download_file(file.file_path)
+    if photo.file_size > 10 * 1024 * 1024:
+        return await msg.answer(await texts.error_photo())
 
-    s3_url = await upload_photo_to_s3(
-        file=file_data.read(),
-        filename=file.file_path.split("/")[-1]
-    )
+    try:
+        file = await msg.bot.get_file(photo.file_id)
+        file_data = await msg.bot.download_file(file.file_path)
+        
+        if not file.file_path.lower().endswith(('.jpg', '.jpeg', '.png')):
+            return await msg.answer(await texts.error_photo_phormat())
 
-    await state.update_data(photo=s3_url)
-    user_data = await state.get_data()
+        s3_url = await upload_photo_to_s3(
+            file=file_data.read(),
+            filename=file.file_path.split("/")[-1]
+        )
 
-    await create_user_profile(user_id=msg.from_user.id, data=user_data)
+        await state.update_data(photo=s3_url)
+        user_data = await state.get_data()
 
-    await msg.answer(await texts.success())
-    await msg.answer_photo(
-        photo=user_data["photo"],
-        caption=await texts.summary(user_data),
-        reply_markup=await keyboards.main_menu_keyboard()
-    )
-    await state.clear()
+        await create_user_profile(user_id=msg.from_user.id, data=user_data)
+
+        await msg.answer(await texts.success())
+        await msg.answer_photo(
+            photo=user_data["photo"],
+            caption=await texts.summary(user_data),
+            reply_markup=await keyboards.main_menu_keyboard()
+        )
+        await state.clear()
+        
+    except Exception as e:
+        await msg.answer("Произошла ошибка при обработке фото, попробуйте еще раз")
 
 
 async def preferences(call: CallbackQuery):
@@ -166,17 +201,30 @@ async def edit_profile(call: CallbackQuery, state: FSMContext):
 
 
 async def show_likes_count(call: CallbackQuery):
-    user_id = call.from_user.id
+    try:
+        async with async_session() as session:
+            user_result = await session.execute(
+                select(User.id).where(User.tg_id == call.from_user.id)
+            )
+            user_id = user_result.scalar_one()
 
-    async with async_session() as session:
-        result = await session.execute(
-            select(func.count()).select_from(Like).where(Like.to_user_id == user_id)
+            result = await session.execute(
+                select(func.count())
+                .select_from(Like)
+                .where(
+                    Like.to_user_id == user_id,
+                    Like.is_like == True
+                )
+            )
+            count = result.scalar()
+
+        text = await texts.likes_count(count)
+        await call.message.answer(text)
+    except Exception as e:
+        await call.message.answer(
+            await texts.error_like(),
+            reply_markup=await keyboards.back_to_menu_keyboard()
         )
-        count = result.scalar()
-
-    text = await texts.likes_count(count)
-    await call.message.answer(text)
-
 
 async def show_rating(call: CallbackQuery):
     user_id = call.from_user.id
@@ -244,7 +292,7 @@ async def edit_back(call: CallbackQuery, state: FSMContext):
             select(User).options(selectinload(User.photo)).where(User.tg_id == tg_id)
         )
         user = result.scalar_one()
-        photo_url = user.photo.url if user.photo else "https://example.com/placeholder.jpg"  # На случай, если нет фото
+        photo_url = user.photo.url if user.photo else "https://example.com/placeholder.jpg"
 
         user_data = {
             "full_name": f"{user.lastname} {user.firstname} {user.mname}",
@@ -338,3 +386,176 @@ async def get_new_bio(msg: Message, state: FSMContext):
         reply_markup=await keyboards.edit_profile_keyboard()
     )
     await state.clear()
+
+
+
+
+# КНОПКА НОМЕР 1 АНКЕТЫ:
+
+async def start_meeting(event: Union[CallbackQuery, Message], state: FSMContext):
+    if isinstance(event, CallbackQuery):
+        await event.message.delete()
+        from_user_id = event.from_user.id
+        answer_photo = event.message.answer_photo
+        answer_text = event.message.answer
+    else:
+        from_user_id = event.from_user.id
+        answer_photo = event.answer_photo
+        answer_text = event.answer
+
+    profile = await get_next_profile(current_tg_id=from_user_id)
+    if not profile:
+        return await answer_text(
+            await texts.no_profiles_left(),
+            reply_markup=await keyboards.back_to_menu_keyboard()
+        )
+
+    await state.set_state(MeetingState.viewing)
+    await state.update_data(current_profile=profile)
+
+    await answer_photo(
+        photo=profile["photo"],
+        caption=await texts.summary(profile),
+        reply_markup=await keyboards.meeting_keyboard()
+    )
+
+
+async def like_profile(call: CallbackQuery, state: FSMContext):
+    await call.message.delete()
+
+    data = await state.get_data()
+    profile = data["current_profile"]
+
+    try:
+        await save_like(
+            from_user_tg_id=call.from_user.id, 
+            to_user_id=profile["id"]
+        )
+    except Exception as e:
+        return await call.message.answer(
+            await texts.error_like(),
+            reply_markup=await keyboards.back_to_menu_keyboard()
+        )
+
+    await call.message.answer(
+        await texts.choose_stars(profile['full_name']),
+        reply_markup=await keyboards.stars_keyboard()
+    )
+    await state.set_state(MeetingState.rating)
+
+
+async def dislike_profile(call: CallbackQuery, state: FSMContext):
+    await call.message.delete()
+
+    data = await state.get_data()
+    profile = data["current_profile"]
+
+    try:
+        await save_like(
+            from_user_tg_id=call.from_user.id,
+            to_user_id=profile["id"], 
+            is_like=False
+        )
+        await call.message.answer(
+            await texts.rating_prompt(profile['full_name']),
+            reply_markup=await keyboards.stars_keyboard()
+        )
+        await state.set_state(MeetingState.rating)
+    except Exception as e:
+        await call.message.answer(
+            await texts.error_dislike(),
+            reply_markup=await keyboards.back_to_menu_keyboard()
+        )
+
+
+
+async def rate_profile(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    profile = data["current_profile"]
+    stars = int(call.data.split("_")[1])
+
+    try:
+        await save_rating(
+            from_user_tg_id=call.from_user.id,
+            to_user_id=profile["id"],
+            score=stars
+        )
+        await call.answer(await texts.rate_sent())
+    except Exception as e:
+        await call.answer(await texts.error_rate())
+
+    await start_meeting(call, state)
+
+
+async def comment_profile(call: CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    data = await state.get_data()
+    profile = data["current_profile"]
+
+    message = await call.message.answer(
+        await texts.comment_prompt(profile['full_name']),
+        reply_markup=await keyboards.back_to_profile_keyboard()
+    )
+    await state.update_data(comment_message_id=message.message_id)
+
+    await state.set_state(MeetingState.comment)
+
+
+async def show_profile_again(msg: Message, state: FSMContext, profile: dict):
+    await msg.answer_photo(
+        photo=profile["photo"],
+        caption=await texts.summary(profile),
+        reply_markup=await keyboards.meeting_keyboard()
+    )
+    await state.set_state(MeetingState.viewing)
+
+
+async def get_comment(msg: Message, state: FSMContext):
+    data = await state.get_data()
+    profile = data["current_profile"]
+    
+    if 'comment_message_id' in data:
+        await msg.bot.delete_message(
+            chat_id=msg.chat.id,
+            message_id=data['comment_message_id']
+        )
+    
+    try:
+        existing_comment = await check_existing_comment(
+            from_user_tg_id=msg.from_user.id,
+            to_user_id=profile["id"]
+        )
+        
+        if existing_comment:
+            await msg.answer(
+                await texts.error_comment(),
+            )
+        else:
+            await save_comment(
+                from_user_tg_id=msg.from_user.id,
+                to_user_id=profile["id"],
+                comment_text=msg.text
+            )
+            await msg.answer(await texts.comment_sent())
+            
+        await show_profile_again(msg, state, profile)
+        
+    except Exception as e:
+        await msg.answer(
+            await texts.error_comment(),
+            reply_markup=await keyboards.back_to_profile_keyboard()
+        )
+
+
+async def back_to_profile(call: CallbackQuery, state: FSMContext):
+    await call.message.delete()
+
+    data = await state.get_data()
+    profile = data["current_profile"]
+
+    await call.message.answer_photo(
+        photo=profile["photo"],
+        caption=await texts.summary(profile),
+        reply_markup=await keyboards.meeting_keyboard()
+    )
+    await state.set_state(MeetingState.viewing)

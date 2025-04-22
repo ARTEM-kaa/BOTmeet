@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.filters import CommandStart
 import handlers.handlers as handlers
 import templates.constants as constants
-from states.states import RegistrationState, EditProfileState, PreferenceState
+from states.states import RegistrationState, EditProfileState, PreferenceState, MeetingState
 
 user_router = Router()
 
@@ -38,3 +38,18 @@ user_router.message.register(handlers.save_min_age, PreferenceState.waiting_for_
 user_router.message.register(handlers.save_max_age, PreferenceState.waiting_for_max_age)
 user_router.message.register(handlers.save_min_rating, PreferenceState.waiting_for_min_rating)
 user_router.message.register(handlers.save_max_rating, PreferenceState.waiting_for_max_rating)
+
+user_router.callback_query.register(handlers.start_meeting, F.data == constants.START_DATING_CALL)
+user_router.callback_query.register(handlers.like_profile, F.data == constants.LIKE_CALL)
+user_router.callback_query.register(handlers.dislike_profile, F.data == constants.DISLIKE_CALL)
+user_router.callback_query.register(handlers.comment_profile, F.data == constants.COMMENT_CALL)
+user_router.callback_query.register(handlers.rate_profile, F.data.in_({
+    constants.STAR_ONE_CALL,
+    constants.STAR_TWO_CALL,
+    constants.STAR_THREE_CALL,
+    constants.STAR_FOUR_CALL,
+    constants.STAR_FIVE_CALL,
+}))
+user_router.callback_query.register(handlers.back_to_profile, F.data == constants.BACK_TO_PROFILE_CALL)
+user_router.message.register(handlers.get_comment, MeetingState.comment)
+user_router.callback_query.register(handlers.edit_back, F.data == constants.BACK_TO_MENU_CALL)

@@ -100,3 +100,60 @@ async def min_rating_saved():
 
 async def max_rating_saved():
     return "✅ Максимальный рейтинг сохранён."
+
+async def comment_prompt(full_name: str) -> str:
+    return f"Снизу вы можете оставить ОДИН комментарий пользователю {full_name}:"
+
+async def rating_prompt(full_name: str) -> str:
+    return f"Поставьте оценку пользователю {full_name}:"
+
+async def updated_successfully() -> str:
+    return "Комментарий отправлен ✅"
+
+async def no_profiles_left() -> str:
+    return "Анкеты закончились 😔"
+
+async def choose_stars(full_name: str) -> str:
+    return f"Выберите количество звёзд для {full_name}:"
+
+async def error_comment() -> str:
+    return "Вы уже отправляли комментарий этому пользователю"
+
+async def comment_sent() -> str:
+    return "Комментарий отправлен ✅"
+
+async def error_rate() -> str:
+    return "Ошибка сохранения оценки"
+
+async def rate_sent() -> str:
+    return "Оценка сохранена ✅"
+
+async def error_dislike() -> str:
+    return "Произошла ошибка при сохранении дизлайка"
+
+async def error_like() -> str:
+    return "Произошла ошибка при сохранении лайка"
+
+async def error_photo() -> str:
+    return "Фото слишком большое (максимум 10MB)"
+
+async def error_photo_phormat() -> str:
+    return "Пожалуйста, отправьте фото в формате JPG или PNG"
+
+async def prohibited_characters() -> str:
+    return "Описание содержит запрещенные символы"
+
+async def bio_length_error() -> str:
+    return "Описание должно быть не длиннее 500 символов"
+
+async def data_bio_error() -> str:
+    return "Пожалуйста, введите текст"
+
+async def age_length_error() -> str:
+    return "Возраст должен быть от 10 до 110 лет"
+
+async def data_name_error_char() -> str:
+    return "ФИО не должно содержать цифр"
+
+async def data_name_error() -> str:
+    return "ФИО должно содержать только буквы"
