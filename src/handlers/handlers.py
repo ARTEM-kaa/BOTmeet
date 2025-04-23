@@ -12,7 +12,7 @@ from sqlalchemy import select
 from model.models import User, Preference
 
 
-async def start(msg: Message, bot: Bot):    
+async def start(msg: Message):
     if await is_user_registered(msg.from_user.id):
         await msg.answer(
             await texts.already_registered(),
@@ -55,7 +55,10 @@ async def get_age(msg: Message, state: FSMContext):
     if not msg.text:
         return await msg.answer(await texts.ask_age_again())
     
-    age = int(msg.text)
+    try:
+        age = int(msg.text)
+    except ValueError:
+        return await msg.answer(await texts.ask_age_again())
     
     if age < 10 or age > 110:
         return await msg.answer(await texts.age_length_error())
@@ -142,7 +145,7 @@ async def set_min_age(call: CallbackQuery, state: FSMContext):
 
 
 async def save_min_age(msg: Message, state: FSMContext):
-    if not msg.text.isdigit():
+    if not msg.text or not msg.text.isdigit():
         return await msg.answer(await texts.ask_age_again())
     
     min_age = int(msg.text)
@@ -177,7 +180,7 @@ async def set_max_age(call: CallbackQuery, state: FSMContext):
 
 
 async def save_max_age(msg: Message, state: FSMContext):
-    if not msg.text.isdigit():
+    if not msg.text or not msg.text.isdigit():
         return await msg.answer(await texts.ask_age_again())
     
     max_age = int(msg.text)
@@ -212,10 +215,29 @@ async def set_min_rating(call: CallbackQuery, state: FSMContext):
 
 
 async def save_min_rating(msg: Message, state: FSMContext):
-    if not msg.text.replace('.', '', 1).isdigit():
+    if not msg.text or not msg.text.replace('.', '', 1).isdigit():
         return await msg.answer(await texts.ask_rating_again())
     
-    await update_user_preferences(msg.from_user.id, {"min_rating": float(msg.text)})
+    min_rating = round(float(msg.text), 1)
+    
+    if min_rating < 0 or min_rating > 5:
+        return await msg.answer(await texts.rating_range_error())
+    
+    async with async_session() as session:
+        user_result = await session.execute(
+            select(User.id).where(User.tg_id == msg.from_user.id)
+        )
+        user_id = user_result.scalar_one()
+
+        prefs = await session.execute(
+            select(Preference).where(Preference.user_id == user_id)
+        )
+        prefs = prefs.scalar_one()
+
+        if hasattr(prefs, 'max_rating') and min_rating > prefs.max_rating:
+            return await msg.answer(await texts.min_rating_error())
+
+    await update_user_preferences(msg.from_user.id, {"min_rating": min_rating})
     await msg.answer(await texts.min_rating_saved(), reply_markup=await keyboards.preferences_menu_keyboard())
     await state.clear()
 
@@ -228,10 +250,29 @@ async def set_max_rating(call: CallbackQuery, state: FSMContext):
 
 
 async def save_max_rating(msg: Message, state: FSMContext):
-    if not msg.text.replace('.', '', 1).isdigit():
+    if not msg.text or not msg.text.replace('.', '', 1).isdigit():
         return await msg.answer(await texts.ask_rating_again())
     
-    await update_user_preferences(msg.from_user.id, {"max_rating": float(msg.text)})
+    max_rating = round(float(msg.text), 1)
+    
+    if max_rating < 0 or max_rating > 5:
+        return await msg.answer(await texts.rating_range_error())
+    
+    async with async_session() as session:
+        user_result = await session.execute(
+            select(User.id).where(User.tg_id == msg.from_user.id)
+        )
+        user_id = user_result.scalar_one()
+        
+        prefs = await session.execute(
+            select(Preference).where(Preference.user_id == user_id)
+        )
+        prefs = prefs.scalar_one()
+        
+        if hasattr(prefs, 'min_rating') and max_rating < prefs.min_rating:
+            return await msg.answer(await texts.max_rating_error())
+
+    await update_user_preferences(msg.from_user.id, {"max_rating": max_rating})
     await msg.answer(await texts.max_rating_saved(), reply_markup=await keyboards.preferences_menu_keyboard())
     await state.clear()
 
@@ -407,7 +448,10 @@ async def get_new_age(msg: Message, state: FSMContext):
     if not msg.text.isdigit():
         return await msg.answer(await texts.ask_age_again())
     
-    age = int(msg.text)
+    try:
+        age = int(msg.text)
+    except ValueError:
+        return await msg.answer(await texts.ask_age_again())
     
     if age < 10 or age > 110:
         return await msg.answer(await texts.age_length_error())
@@ -483,7 +527,11 @@ async def get_all_new_age(msg: Message, state: FSMContext):
     if not msg.text.isdigit():
         return await msg.answer(await texts.ask_age_again())
     
-    age = int(msg.text)
+    try:
+        age = int(msg.text)
+    except ValueError:
+        return await msg.answer(await texts.ask_age_again())
+    
     if age < 10 or age > 110:
         return await msg.answer(await texts.age_length_error())
 

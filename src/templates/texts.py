@@ -57,12 +57,15 @@ async def likes_count(count: int) -> str:
         return "😔 Пока никто не поставил тебе лайк."
     return f"❤️ Тебе поставили <b>{count}</b> лайк(ов)!"
 
-async def rating_info(avg_rating: float, total: int) -> str:
-    if total == 0:
-        return "😶 Пока никто не оценил твой профиль."
+async def rating_info(user_rating: float, like_count: int, dislike_count: int) -> str:
+    rating = float(user_rating) if user_rating is not None else 0.0
+    likes = like_count if like_count is not None else 0
+    dislikes = dislike_count if dislike_count is not None else 0
+    
     return (
-        f"📊 Твой рейтинг: <b>{round(avg_rating, 2)}</b> ⭐️\n"
-        f"Лайков: <b>{total}</b> ❤️"
+        f"📊 Ваш текущий рейтинг: {rating:.1f}\n"
+        f"❤️ Получено лайков: {likes}\n"
+        f"👎 Получено дизлайков: {dislikes}"
     )
 
 async def edit_profile_text():
@@ -165,14 +168,11 @@ async def saving_like() -> str:
 async def error_saving_like() -> str:
     return "❌ Ошибка при сохранении лайка"
 
+async def min_rating_error() -> str:
+    return "Минимальный рейтинг не может быть больше максимального"
 
-async def rating_info(user_rating: float, like_count: int, dislike_count: int) -> str:
-    rating = float(user_rating) if user_rating is not None else 0.0
-    likes = like_count if like_count is not None else 0
-    dislikes = dislike_count if dislike_count is not None else 0
-    
-    return (
-        f"📊 Ваш текущий рейтинг: {rating:.1f}\n"
-        f"❤️ Получено лайков: {likes}\n"
-        f"👎 Получено дизлайков: {dislikes}"
-    )
+async def max_rating_error() -> str:
+    return "Максимальный рейтинг не может быть меньше минимального"
+
+async def rating_range_error() -> str:
+    return "Рейтинг должен быть между 0 и 5"

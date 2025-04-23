@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from sqlalchemy import (
     BigInteger, Boolean, CheckConstraint, ForeignKey, Integer, Numeric,

@@ -9,9 +9,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from config.settings import settings
 
-print(f"BOT_TOKEN from settings: {settings.BOT_TOKEN}")
-print(f"BOT_TOKEN from os: {os.getenv('BOT_TOKEN')}")
-
 bot = Bot(
     token=settings.BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
