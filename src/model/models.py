@@ -21,13 +21,13 @@ class User(Base):
     age: Mapped[int] = mapped_column(Integer, nullable=False)
     gender: Mapped[str] = mapped_column(String, nullable=False)
     bio: Mapped[str] = mapped_column(String(200), nullable=False)
-    rating: Mapped[float] = mapped_column(Numeric(2, 1), nullable=False, default=0.0)
+    rating: Mapped[float] = mapped_column(Numeric(3, 2), default=2.5)
+    like_count: Mapped[int] = mapped_column(Integer, default=0)
+    dislike_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.utcnow)
 
     photo: Mapped['Photo'] = relationship('Photo', back_populates='user', uselist=False, cascade='all, delete-orphan')
     preferences: Mapped['Preference'] = relationship('Preference', back_populates='user', uselist=False, cascade='all, delete-orphan')
-    ratings_given: Mapped[List['Rating']] = relationship('Rating', foreign_keys='Rating.from_user_id', back_populates='from_user')
-    ratings_received: Mapped[List['Rating']] = relationship('Rating', foreign_keys='Rating.to_user_id', back_populates='to_user')
     likes_given: Mapped[List['Like']] = relationship('Like', foreign_keys='Like.from_user_id', back_populates='from_user')
     likes_received: Mapped[List['Like']] = relationship('Like', foreign_keys='Like.to_user_id', back_populates='to_user')
     messages_sent: Mapped[List['Message']] = relationship('Message', foreign_keys='Message.sender_id', back_populates='sender')
@@ -66,25 +66,6 @@ class Preference(Base):
         CheckConstraint('max_age <= 110', name='ck_preferences_max_age'),
         CheckConstraint('min_rating >= 0 AND min_rating <= 5', name='ck_preferences_min_rating'),
         CheckConstraint('max_rating >= 0 AND max_rating <= 5', name='ck_preferences_max_rating'),
-    )
-
-
-class Rating(Base):
-    __tablename__ = 'ratings'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    from_user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    to_user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    score: Mapped[int] = mapped_column(Integer, default=0)
-    comment: Mapped[Optional[str]] = mapped_column(String(500), nullable=True) 
-    created_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.utcnow)
-
-    from_user: Mapped['User'] = relationship('User', foreign_keys=[from_user_id], back_populates='ratings_given')
-    to_user: Mapped['User'] = relationship('User', foreign_keys=[to_user_id], back_populates='ratings_received')
-
-    __table_args__ = (
-        UniqueConstraint('from_user_id', 'to_user_id', name='uq_ratings_from_to'),
-        CheckConstraint('score >= 0 AND score <= 5', name='ck_ratings_score_range'),
     )
 
 

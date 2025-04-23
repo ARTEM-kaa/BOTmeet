@@ -14,7 +14,6 @@ user_router.callback_query.register(handlers.get_gender, RegistrationState.waiti
 user_router.message.register(handlers.get_bio, RegistrationState.waiting_for_bio)
 user_router.message.register(handlers.get_photo, RegistrationState.waiting_for_photo)
 user_router.callback_query.register(handlers.preferences, F.data == constants.SET_PREFERENCES_CALL)
-user_router.callback_query.register(handlers.show_likes_count, F.data == constants.VIEW_LIKES_CALL)
 user_router.callback_query.register(handlers.show_rating, F.data == constants.VIEW_RATING_CALL)
 user_router.callback_query.register(handlers.edit_profile, F.data == constants.EDIT_PROFILE_CALL)
 user_router.callback_query.register(handlers.edit_photo, F.data == constants.EDIT_PHOTO_CALL)
@@ -38,18 +37,12 @@ user_router.message.register(handlers.save_min_age, PreferenceState.waiting_for_
 user_router.message.register(handlers.save_max_age, PreferenceState.waiting_for_max_age)
 user_router.message.register(handlers.save_min_rating, PreferenceState.waiting_for_min_rating)
 user_router.message.register(handlers.save_max_rating, PreferenceState.waiting_for_max_rating)
-
 user_router.callback_query.register(handlers.start_meeting, F.data == constants.START_DATING_CALL)
 user_router.callback_query.register(handlers.like_profile, F.data == constants.LIKE_CALL)
 user_router.callback_query.register(handlers.dislike_profile, F.data == constants.DISLIKE_CALL)
-user_router.callback_query.register(handlers.comment_profile, F.data == constants.COMMENT_CALL)
-user_router.callback_query.register(handlers.rate_profile, F.data.in_({
-    constants.STAR_ONE_CALL,
-    constants.STAR_TWO_CALL,
-    constants.STAR_THREE_CALL,
-    constants.STAR_FOUR_CALL,
-    constants.STAR_FIVE_CALL,
-}))
-user_router.callback_query.register(handlers.back_to_profile, F.data == constants.BACK_TO_PROFILE_CALL)
-user_router.message.register(handlers.get_comment, MeetingState.comment)
 user_router.callback_query.register(handlers.edit_back, F.data == constants.BACK_TO_MENU_CALL)
+user_router.message.register(handlers.get_all_new_full_name, EditProfileState.editing_all_name)
+user_router.message.register(handlers.get_all_new_age, EditProfileState.editing_all_age)
+user_router.callback_query.register(handlers.get_all_new_gender, EditProfileState.editing_all_gender)
+user_router.message.register(handlers.get_all_new_bio, EditProfileState.editing_all_bio)
+user_router.message.register(handlers.get_all_new_photo, EditProfileState.editing_all_photo, F.photo)

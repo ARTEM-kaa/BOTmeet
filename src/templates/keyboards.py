@@ -25,10 +25,7 @@ async def main_menu_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=constants.START_DATING_BUTTON, callback_data=constants.START_DATING_CALL)],
         [InlineKeyboardButton(text=constants.SET_PREFERENCES_BUTTON, callback_data=constants.SET_PREFERENCES_CALL)],
         [InlineKeyboardButton(text=constants.EDIT_PROFILE_BUTTON, callback_data=constants.EDIT_PROFILE_CALL)],
-        [InlineKeyboardButton(text=constants.VIEW_LIKES_BUTTON, callback_data=constants.VIEW_LIKES_CALL)],
         [InlineKeyboardButton(text=constants.VIEW_RATING_BUTTON, callback_data=constants.VIEW_RATING_CALL)],
-        [InlineKeyboardButton(text=constants.VIEW_COMMENTS_RECEIVED_BUTTON, callback_data=constants.VIEW_COMMENTS_RECEIVED_CALL)],
-        [InlineKeyboardButton(text=constants.VIEW_COMMENTS_SENT_BUTTON, callback_data=constants.VIEW_COMMENTS_SENT_CALL)],
         [InlineKeyboardButton(text=constants.VIEW_MATCHES_BUTTON, callback_data=constants.VIEW_MATCHES_CALL)],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -60,29 +57,9 @@ async def meeting_keyboard():
     keyboard=[
         [InlineKeyboardButton(text=constants.LIKE_BUTTON, callback_data=constants.LIKE_CALL)],
         [InlineKeyboardButton(text=constants.DISLIKE_BUTTON, callback_data=constants.DISLIKE_CALL)],
-        [InlineKeyboardButton(text=constants.COMMENT_BUTTON, callback_data=constants.COMMENT_CALL)],
         [InlineKeyboardButton(text=constants.BACK_TO_MENU_BUTTON, callback_data=constants.BACK_TO_MENU_CALL)],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-
-async def stars_keyboard():
-    keyboard=[
-        [
-            InlineKeyboardButton(text=constants.STAR_ONE_BUTTON, callback_data=constants.STAR_ONE_CALL),
-            InlineKeyboardButton(text=constants.STAR_TWO_BUTTON, callback_data=constants.STAR_TWO_CALL),
-            InlineKeyboardButton(text=constants.STAR_THREE_BUTTON, callback_data=constants.STAR_THREE_CALL),
-            InlineKeyboardButton(text=constants.STAR_FOUR_BUTTON, callback_data=constants.STAR_FOUR_CALL),
-            InlineKeyboardButton(text=constants.STAR_FIVE_BUTTON, callback_data=constants.STAR_FIVE_CALL)
-        ]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
-
-async def back_to_profile_keyboard():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=constants.BACK_TO_PROFILE_BUTTON, callback_data=constants.BACK_TO_PROFILE_CALL)]
-    ])
 
 
 async def back_to_menu_keyboard():

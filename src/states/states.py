@@ -15,6 +15,11 @@ class EditProfileState(StatesGroup):
     waiting_for_new_gender = State()
     waiting_for_new_age = State()
     waiting_for_new_bio = State()
+    editing_all_photo = State()
+    editing_all_name = State()
+    editing_all_gender = State()
+    editing_all_age = State()
+    editing_all_bio = State()
 
 
 class PreferenceState(StatesGroup):
@@ -26,5 +31,4 @@ class PreferenceState(StatesGroup):
 
 class MeetingState(StatesGroup):
     viewing = State()
-    rating = State()
-    comment = State()
+    commented_not_rated = State()

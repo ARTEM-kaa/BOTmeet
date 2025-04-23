@@ -1,5 +1,11 @@
 _ = lambda text: text
 
+async def already_registered():
+    return _(
+        "Вы уже зарегистрированы в системе!\n"
+        "Можете воспользоваться главным меню."
+    )
+
 async def start_message():
     return _(
         "Привет, это бот для знакомств! 👋\n"
@@ -53,10 +59,10 @@ async def likes_count(count: int) -> str:
 
 async def rating_info(avg_rating: float, total: int) -> str:
     if total == 0:
-        return "😶 Пока никто не поставил тебе оценку."
+        return "😶 Пока никто не оценил твой профиль."
     return (
         f"📊 Твой рейтинг: <b>{round(avg_rating, 2)}</b> ⭐️\n"
-        f"Количество оценок: <b>{total}</b>"
+        f"Лайков: <b>{total}</b> ❤️"
     )
 
 async def edit_profile_text():
@@ -101,32 +107,8 @@ async def min_rating_saved():
 async def max_rating_saved():
     return "✅ Максимальный рейтинг сохранён."
 
-async def comment_prompt(full_name: str) -> str:
-    return f"Снизу вы можете оставить ОДИН комментарий пользователю {full_name}:"
-
-async def rating_prompt(full_name: str) -> str:
-    return f"Поставьте оценку пользователю {full_name}:"
-
-async def updated_successfully() -> str:
-    return "Комментарий отправлен ✅"
-
 async def no_profiles_left() -> str:
     return "Анкеты закончились 😔"
-
-async def choose_stars(full_name: str) -> str:
-    return f"Выберите количество звёзд для {full_name}:"
-
-async def error_comment() -> str:
-    return "Вы уже отправляли комментарий этому пользователю"
-
-async def comment_sent() -> str:
-    return "Комментарий отправлен ✅"
-
-async def error_rate() -> str:
-    return "Ошибка сохранения оценки"
-
-async def rate_sent() -> str:
-    return "Оценка сохранена ✅"
 
 async def error_dislike() -> str:
     return "Произошла ошибка при сохранении дизлайка"
@@ -157,3 +139,40 @@ async def data_name_error_char() -> str:
 
 async def data_name_error() -> str:
     return "ФИО должно содержать только буквы"
+
+
+async def min_age_error() -> str:
+    return "Минимальный возраст не может быть больше максимального"
+
+async def max_age_error() -> str:
+    return "Максимальный возраст не может быть меньше минимального"
+
+async def profile_updated_completely() -> str:
+    return "Профиль успешно обновлён ✅"
+
+async def error_questionnaire() -> str:
+    return "❌ Ошибка: анкета не найдена"
+
+async def saving_dislike() -> str:
+    return "👎"
+
+async def error_saving_dislike() -> str:
+    return "❌ Ошибка при сохранении дизлайка"
+
+async def saving_like() -> str:
+    return "❤️"
+
+async def error_saving_like() -> str:
+    return "❌ Ошибка при сохранении лайка"
+
+
+async def rating_info(user_rating: float, like_count: int, dislike_count: int) -> str:
+    rating = float(user_rating) if user_rating is not None else 0.0
+    likes = like_count if like_count is not None else 0
+    dislikes = dislike_count if dislike_count is not None else 0
+    
+    return (
+        f"📊 Ваш текущий рейтинг: {rating:.1f}\n"
+        f"❤️ Получено лайков: {likes}\n"
+        f"👎 Получено дизлайков: {dislikes}"
+    )
