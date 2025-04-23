@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import (
     BigInteger, Boolean, CheckConstraint, ForeignKey, Integer, Numeric,
@@ -15,6 +15,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
+    tg_username: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     firstname: Mapped[str] = mapped_column(String(25), nullable=False)
     lastname: Mapped[str] = mapped_column(String(25), nullable=False)
     mname: Mapped[str] = mapped_column(String(25), nullable=False)
@@ -30,8 +31,6 @@ class User(Base):
     preferences: Mapped['Preference'] = relationship('Preference', back_populates='user', uselist=False, cascade='all, delete-orphan')
     likes_given: Mapped[List['Like']] = relationship('Like', foreign_keys='Like.from_user_id', back_populates='from_user')
     likes_received: Mapped[List['Like']] = relationship('Like', foreign_keys='Like.to_user_id', back_populates='to_user')
-    messages_sent: Mapped[List['Message']] = relationship('Message', foreign_keys='Message.sender_id', back_populates='sender')
-    messages_received: Mapped[List['Message']] = relationship('Message', foreign_keys='Message.receiver_id', back_populates='receiver')
 
     __table_args__ = (
         CheckConstraint('age BETWEEN 10 AND 110', name='ck_users_age_range'),
@@ -92,16 +91,3 @@ class Match(Base):
     __table_args__ = (
         UniqueConstraint('user1_id', 'user2_id', name='uq_matches_user1_user2'),
     )
-
-
-class Message(Base):
-    __tablename__ = 'messages'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    sender_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    receiver_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    content: Mapped[str] = mapped_column(String(2500), nullable=False)
-    sent_at: Mapped[datetime] = mapped_column(TIMESTAMP, default=datetime.utcnow)
-
-    sender: Mapped['User'] = relationship('User', foreign_keys=[sender_id], back_populates='messages_sent')
-    receiver: Mapped['User'] = relationship('User', foreign_keys=[receiver_id], back_populates='messages_received')

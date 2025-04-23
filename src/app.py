@@ -1,5 +1,6 @@
 import asyncio
-from bot import bot, dp
+from bot import dp
+from core.bot_instance import bot_instance as bot
 from storage.db import create_tables
 
 async def main():

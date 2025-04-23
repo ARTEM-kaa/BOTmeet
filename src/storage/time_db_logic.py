@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import select, update, func, delete
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.orm import selectinload
+from handlers.match import send_match_notification
 
 
 async def is_user_registered(tg_id: int) -> bool:
@@ -14,7 +15,7 @@ async def is_user_registered(tg_id: int) -> bool:
         return result.scalar_one_or_none() is not None
 
 
-async def create_user_profile(user_id: int, data: dict):
+async def create_user_profile(user_id: int, data: dict, tg_username: str = None):
     full_name = data["full_name"].split()
     firstname, lastname, mname = full_name[1], full_name[0], full_name[2]
 
@@ -31,7 +32,8 @@ async def create_user_profile(user_id: int, data: dict):
                 rating=2.5,
                 like_count=0,
                 dislike_count=0,
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
+                tg_username=tg_username
             )
             session.add(user)
             await session.flush()
@@ -196,6 +198,28 @@ async def get_next_profile(current_tg_id: int, state: FSMContext = None):
         return None
 
 
+async def check_match(session, user1_id: int, user2_id: int):
+    async with async_session() as session:
+        # Проверяем взаимный лайк
+        mutual_like = await session.execute(
+            select(Like)
+            .where(
+                Like.from_user_id == user2_id,
+                Like.to_user_id == user1_id,
+                Like.is_like == True
+            )
+        )
+        
+        if mutual_like.scalar():
+            # Получаем данные пользователей
+            user1 = await session.get(User, user1_id)
+            user2 = await session.get(User, user2_id)
+            
+            # Отправляем уведомления
+            await send_match_notification(user1.tg_id, user2)
+            await send_match_notification(user2.tg_id, user1)
+
+
 async def save_like(from_user_tg_id: int, to_user_id: int, is_like: bool = True):
     async with async_session() as session:
         from_user = await session.execute(
@@ -221,6 +245,10 @@ async def save_like(from_user_tg_id: int, to_user_id: int, is_like: bool = True)
         try:
             await session.commit()
             await update_user_rating(to_user_id)
+            
+            if is_like:
+                await check_match(session, from_user_id, to_user_id)
+                
         except Exception as e:
             await session.rollback()
             raise Exception(f"Ошибка сохранения реакции: {str(e)}")

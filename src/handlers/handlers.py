@@ -115,7 +115,7 @@ async def get_photo(msg: Message, state: FSMContext):
         await state.update_data(photo=s3_url)
         user_data = await state.get_data()
 
-        await create_user_profile(user_id=msg.from_user.id, data=user_data)
+        await create_user_profile(user_id=msg.from_user.id, data=user_data, tg_username=msg.from_user.username)
 
         await msg.answer(await texts.success())
         await msg.answer_photo(
@@ -658,15 +658,15 @@ async def like_profile(call: CallbackQuery, state: FSMContext):
                 to_user_id=profile["id"],
                 is_like=True
             )
+            await call.answer(await texts.saving_like())
         except Exception as e:
             await call.answer(await texts.error_saving_like(), show_alert=True)
             return
 
-        await call.answer(await texts.saving_like())
         await start_meeting(call, state)
 
     except Exception as e:
-        await call.answer(await texts.error_saving_like())
+        await call.answer(await texts.error_saving_like(), show_alert=True)
 
 
 async def dislike_profile(call: CallbackQuery, state: FSMContext):
