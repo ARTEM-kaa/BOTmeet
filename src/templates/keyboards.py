@@ -26,7 +26,6 @@ async def main_menu_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=constants.SET_PREFERENCES_BUTTON, callback_data=constants.SET_PREFERENCES_CALL)],
         [InlineKeyboardButton(text=constants.EDIT_PROFILE_BUTTON, callback_data=constants.EDIT_PROFILE_CALL)],
         [InlineKeyboardButton(text=constants.VIEW_RATING_BUTTON, callback_data=constants.VIEW_RATING_CALL)],
-        [InlineKeyboardButton(text=constants.VIEW_MATCHES_BUTTON, callback_data=constants.VIEW_MATCHES_CALL)],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

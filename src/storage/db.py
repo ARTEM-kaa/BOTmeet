@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 import sys
 import os
 from config.settings import settings
-from model.meta import Base
+from src.model.meta import Base
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 

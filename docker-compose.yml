@@ -10,6 +10,28 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
 
+  rabbitmq:
+    image: rabbitmq:3.13.7-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  consumer:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: python -m consumer.app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - .:/code
+
   bot:
     build:
       context: .

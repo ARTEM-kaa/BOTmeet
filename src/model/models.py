@@ -7,7 +7,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from model.meta import Base
+from src.model.meta import Base
 
 
 class User(Base):

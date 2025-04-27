@@ -14,8 +14,6 @@ EDIT_PROFILE_CALL = "edit_profile"
 EDIT_PROFILE_BUTTON = "3️⃣ Редактировать свой профиль"
 VIEW_RATING_CALL = "view_rating"
 VIEW_RATING_BUTTON = "4️⃣ Посмотреть свой рейтинг"
-VIEW_MATCHES_CALL = "view_matches"
-VIEW_MATCHES_BUTTON = "5️⃣ Взаимные совпадения"
 
 MIN_AGE_CALL = "min_age"
 MIN_AGE_BUTTON = "Минимальный возраст"
