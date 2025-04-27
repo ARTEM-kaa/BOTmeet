@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -20,6 +21,12 @@ class Settings(BaseSettings):
     BUCKET_NAME: str
     REGION_NAME: str
     ENDPOINT_URL: str
+    
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
+    REDIS_PASSWORD: Optional[str] = None
+    REDIS_EXPIRE_SECONDS: int
 
     USER_QUEUE: str = 'user_queue.{user_id}'
 
@@ -30,6 +37,11 @@ class Settings(BaseSettings):
     @property
     def rebbitmq_url(self) -> str:
         return f'amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASSWORD}@{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}/'
+    
+    @property
+    def redis_url(self) -> str:
+        password_part = f':{self.REDIS_PASSWORD}@' if self.REDIS_PASSWORD else ''
+        return f'redis://{password_part}{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}'
 
     model_config = SettingsConfigDict(env_file='config/.env', env_file_encoding='utf-8')
 

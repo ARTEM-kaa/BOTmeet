@@ -1,10 +1,10 @@
-from aiogram.types import Message, CallbackQuery, Union
+from aiogram.types import Message, CallbackQuery, Union, BufferedInputFile
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.orm import selectinload
 
 from templates import keyboards, texts, constants
 from states.states import RegistrationState, EditProfileState, PreferenceState, MeetingState
-from storage.s3_yandex import upload_photo_to_s3
+from storage.s3_yandex import upload_photo_to_s3, get_photo_with_cache
 from storage.db import async_session
 from sqlalchemy import select
 from model.models import User, Preference
@@ -13,7 +13,7 @@ import aio_pika
 import msgpack
 from config.settings import settings
 from core.bot_instance import bot_instance
-
+import io 
 
 
 async def start(msg: Message):
@@ -146,6 +146,8 @@ async def get_photo(msg: Message, state: FSMContext):
 
     await state.update_data(photo=s3_url)
     user_data = await state.get_data()
+    
+    photo_data = await get_photo_with_cache(s3_url)
 
     async with rabbit.channel_pool.acquire() as channel:
         exchange = await channel.declare_exchange('user_actions', aio_pika.ExchangeType.TOPIC, durable=True)
@@ -168,11 +170,30 @@ async def get_photo(msg: Message, state: FSMContext):
         )
 
     await msg.answer(await texts.success())
-    await msg.answer_photo(
-        photo=user_data["photo"],
-        caption=await texts.summary(user_data),
-        reply_markup=await keyboards.main_menu_keyboard()
-    )
+    if photo_data:
+        try:
+            photo_file = BufferedInputFile(
+                    file=photo_data,
+                    filename="profile.jpg"
+                )
+            await msg.answer_photo(
+                photo=photo_file,
+                caption=await texts.summary(user_data),
+                reply_markup=await keyboards.main_menu_keyboard()
+            )
+        except Exception as e:
+            await msg.answer_photo(
+                photo=s3_url,
+                caption=await texts.summary(user_data),
+                reply_markup=await keyboards.main_menu_keyboard()
+            )
+    else:
+        await msg.answer("⚠️ Не удалось загрузить фото. Попробуйте позже.")
+        await msg.answer_photo(
+            photo=s3_url,
+            caption=await texts.summary(user_data),
+            reply_markup=await keyboards.main_menu_keyboard()
+        )
     await state.clear()
 
 

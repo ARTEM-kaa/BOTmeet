@@ -7,7 +7,7 @@ from consumer.storage.rabbit import channel_pool
 import aio_pika
 from aio_pika import ExchangeType
 from config.settings import settings
-from src.storage.s3_yandex import upload_photo_to_s3
+from src.storage.s3_yandex import upload_photo_to_s3, get_photo_with_cache
 
 
 async def process_photo_update(body: dict):
